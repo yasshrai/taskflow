@@ -1,16 +1,12 @@
 from pydantic import BaseModel, ConfigDict
 from enum import Enum
 
-TASK_CREATED = "created"
-TASK_COMPLETED = "completed"
-TASK_PENDING = "pending"
-TASK_CANCELED = "cancel"
-
 
 class TaskStatusCode(Enum):
     PENDING = "pending"
     CANCELED = "canceled"
     COMPLETED = "completed"
+    CREATED = "created"
 
 
 class Task(BaseModel):

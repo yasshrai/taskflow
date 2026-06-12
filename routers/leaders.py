@@ -4,7 +4,7 @@ from models.task import TaskModel
 from schemas.leader import LeaderCreate, LeaderLogin
 from database.database import get_db
 from models.leader import LeaderModel
-from schemas.task import TASK_CREATED, TaskStatus, TaskCreate
+from schemas.task import TaskStatus, TaskCreate
 from tools.password import hash_password, verify_password
 from tools.authentication import create_access_token, get_current_leader
 from uuid import uuid4
@@ -116,7 +116,7 @@ def createTask(
             description=task_details.description,
             assigned_to=found,
             assigned_by=current_leader.email,
-            status=TASK_CREATED,
+            status=task_details.status,
         )
         db.add(db_task)
         db.commit()
