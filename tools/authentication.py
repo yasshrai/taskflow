@@ -7,9 +7,7 @@ import dotenv
 import os
 from models import LeaderModel
 from fastapi.security import HTTPBearer
-
 from models.user import UserModel
-from schemas.task import Task
 
 dotenv.load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET", "")
