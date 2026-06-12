@@ -87,6 +87,9 @@ def updateTaskStatus(
         if not task:
             return {"error": "task not exist"}
 
+        if task.assigned_by != current_leader.email:
+            return {"error": "task not created by you"}
+
         task.status = str(task_details.newStatus.value)
         db.commit()
         db.refresh(task)
