@@ -11,6 +11,8 @@ from uuid import uuid4
 from models.user import UserModel
 from schemas.user import UserCreate
 from tools.helper import checkAllUsersExists
+from database.redis_db import get_redis
+from redis.asyncio import Redis
 
 leadersRouter = APIRouter(prefix="/leaders")
 
@@ -202,5 +204,12 @@ def login(leader_details: LeaderLogin, db: Session = Depends(get_db)):
 
 
 @leadersRouter.post("/logout")
-def logout(current_leader=Depends(get_current_leader)):
+async def logout(
+    current_leader=Depends(get_current_leader), redis: Redis = Depends(get_redis)
+):
+    await redis.set(
+        f"blacklist:{current_leader[1]}",
+        "1",
+        ex=3600,
+    )
     return {"message": "logout successfully", "leader": current_leader}

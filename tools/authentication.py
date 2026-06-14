@@ -8,6 +8,8 @@ import os
 from models import LeaderModel
 from fastapi.security import HTTPBearer
 from models.user import UserModel
+from database.redis_db import get_redis
+from redis.asyncio import Redis
 
 dotenv.load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET", "")
@@ -29,11 +31,13 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
     return user
 
 
-def get_current_leader(
-    token: str,
-    db: Session = Depends(get_db),
+async def get_current_leader(
+    token: str, db: Session = Depends(get_db), redis: Redis = Depends(get_redis)
 ):
     token = token
+    if await redis.exists(f"blacklist:{token}"):
+        raise HTTPException(status_code=401, detail="Token revoked")
+
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
     leader_id = payload["sub"]
@@ -43,7 +47,7 @@ def get_current_leader(
     if not leader:
         raise HTTPException(401, "leader not found")
 
-    return leader
+    return leader, token
 
 
 def create_access_token(id: str):

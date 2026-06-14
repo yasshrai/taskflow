@@ -1,28 +1,25 @@
+
 FROM python:3.12-slim-trixie
 
-# Copy the uv and uvx binaries from the official Astral image
+# Copy uv binaries to the system path correctly
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# CRITICAL FIX: Directs Docker to look inside your virtual environment for commands
-ENV PATH="/app/.venv/bin:$PATH"
-ENV UV_COMPILE_BYTECODE=1
-
 WORKDIR /app
+
+# Copy dependency files first for caching optimization
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies using uv with local caching enabled
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project
+# Create virtual environment and install exact locked dependencies
+RUN uv venv .venv && \
+    uv sync --frozen
+
+# Ensure subsequent steps and runtime use the virtual environment
+ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 
-# Copy your source code AFTER dependencies are installed
+# Copy the rest of your application code
 COPY . .
 
-# Final fast sync to register your project packages
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen
-
-# Use 'run' instead of 'dev' for container deployments
-CMD ["fastapi", "run", "main.py", "--port", "8000"]
-
+# Use 'uv run' to safely execute 'fastapi run' in production
+CMD ["uv", "run", "fastapi", "run", "main.py", "--port", "8000"]
