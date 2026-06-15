@@ -19,8 +19,13 @@ ALGORITHM = "HS256"
 security = HTTPBearer()
 
 
-def get_current_user(token: str, db: Session = Depends(get_db)):
+async def get_current_user(
+    token: str, db: Session = Depends(get_db), redis: Redis = Depends(get_redis)
+):
     token = token
+
+    if await redis.exists(f"blacklist:{token}"):
+        raise HTTPException(status_code=401, detail="Token revoked")
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     user_id = payload["sub"]
 
@@ -28,7 +33,7 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(401, "User not Found")
 
-    return user
+    return user, token
 
 
 async def get_current_leader(

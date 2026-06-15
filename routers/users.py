@@ -7,6 +7,8 @@ from schemas.task import TaskUpdate
 from schemas.user import UserLogin
 from tools.authentication import create_access_token, get_current_user
 from tools.password import verify_password
+from redis.asyncio import Redis
+from database.redis_db import get_redis
 
 userRouter = APIRouter(prefix="/users")
 
@@ -19,7 +21,9 @@ def welcome():
 @userRouter.get("/fetchtasks")
 def fetchTask(db: Session = Depends(get_db), user_details=Depends(get_current_user)):
     tasks = (
-        db.query(TaskModel).filter(TaskModel.assigned_to.any(user_details.email)).all()
+        db.query(TaskModel)
+        .filter(TaskModel.assigned_to.any(user_details[0].email))
+        .all()
     )
     return {"alltask": tasks}
 
@@ -35,7 +39,7 @@ def updateTask(
             db.query(TaskModel)
             .filter(
                 TaskModel.task_id == task_details.task_id,
-                TaskModel.assigned_to.contains([user_details.email]),
+                TaskModel.assigned_to.contains([user_details[0].email]),
             )
             .first()
         )
@@ -80,5 +84,15 @@ def login(user_details: UserLogin, db: Session = Depends(get_db)):
 
 
 @userRouter.post("/logout")
-def logout(user_details=Depends(get_current_user)):
+async def logout(
+    user_details=Depends(get_current_user), redis: Redis = Depends(get_redis)
+):
+
+    await redis.set(
+        f"blacklist:{user_details[1]}",
+        "1",
+        ex=3600,
+    )
+    print(await redis.exists(f"blacklist:{user_details[1]}"))
+    input()
     return {"message": "succesfully logout", "user": user_details}

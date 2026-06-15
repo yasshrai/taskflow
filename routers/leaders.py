@@ -24,14 +24,14 @@ def fetchReport(
     try:
         tasks = (
             db.query(TaskModel)
-            .filter(TaskModel.assigned_by == Leader_details.email)
+            .filter(TaskModel.assigned_by == Leader_details[0].email)
             .all()
         )
         report = {}
         for task in tasks:
-            if task.status not in report:
-                report[task.status] = 0
-            report[task.status] += 1
+            if task.status.lower() not in report:
+                report[task.status.lower()] = 0
+            report[task.status.lower()] += 1
         return report
     except Exception as e:
         return {"error": e}
@@ -89,7 +89,7 @@ def updateTaskStatus(
         if not task:
             return {"error": "task not exist"}
 
-        if task.assigned_by != current_leader.email:
+        if task.assigned_by != current_leader[0].email:
             return {"error": "task not created by you"}
 
         task.status = str(task_details.newStatus.value)
@@ -117,7 +117,7 @@ def createTask(
             title=task_details.title,
             description=task_details.description,
             assigned_to=found,
-            assigned_by=current_leader.email,
+            assigned_by=current_leader[0].email,
             status=task_details.status,
         )
         db.add(db_task)
@@ -135,7 +135,11 @@ def fetchalltasks(
     db: Session = Depends(get_db), current_leader=Depends(get_current_leader)
 ):
     try:
-        return {"message": db.query(TaskModel).all()}
+        return {
+            "message": db.query(TaskModel)
+            .filter(TaskModel.assigned_by == current_leader[0].email)
+            .all()
+        }
     except Exception as e:
         return {"error": "not able to fetch tasks"}
 

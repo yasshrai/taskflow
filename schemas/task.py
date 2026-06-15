@@ -25,7 +25,7 @@ class TaskUpdate(BaseModel):
     task_id: str
     title: str
     description: str | None = None
-    status: str
+    status: TaskStatusCode
 
 
 class TaskCreate(BaseModel):
