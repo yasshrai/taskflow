@@ -1,0 +1,38 @@
+services:
+  app:
+    build: .
+    container_name: taskflow-app
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17
+    container_name: taskflow-postgres
+
+    environment:
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: taskflow-redis
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
