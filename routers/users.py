@@ -93,6 +93,4 @@ async def logout(
         "1",
         ex=3600,
     )
-    print(await redis.exists(f"blacklist:{user_details[1]}"))
-    input()
     return {"message": "succesfully logout", "user": user_details}
