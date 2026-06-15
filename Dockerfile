@@ -22,4 +22,4 @@ EXPOSE 8000
 COPY . .
 
 # Use 'uv run' to safely execute 'fastapi run' in production
-CMD ["uv", "run", "fastapi", "run", "main.py", "--port", "8000"]
+CMD ["fastapi", "run"]
