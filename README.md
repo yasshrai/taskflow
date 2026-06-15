@@ -36,6 +36,8 @@ createdb taskmanage
 ```env
 DATABASE_URL=postgresql+psycopg://<user>@localhost:5432/taskmanage
 JWT_SECRET=<your-secret-key>
+REDIS_HOST="localhost"
+REDIS_PORT="6379"
 ```
 4. activate venv:
 ```bash
