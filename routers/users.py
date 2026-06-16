@@ -20,9 +20,11 @@ def welcome():
 
 @userRouter.get("/fetchtasks")
 def fetchTask(db: Session = Depends(get_db), user_details=Depends(get_current_user)):
+    if "error" in user_details:
+        return {"error": str(user_details["error"])}
     tasks = (
         db.query(TaskModel)
-        .filter(TaskModel.assigned_to.any(user_details[0].email))
+        .filter(TaskModel.assigned_to.any(user_details["data"][0].email))
         .all()
     )
     return {"alltask": tasks}
@@ -34,12 +36,14 @@ def updateTask(
     db: Session = Depends(get_db),
     user_details=Depends(get_current_user),
 ):
+    if "error" in user_details:
+        return {"error": str(user_details["error"])}
     try:
         task = (
             db.query(TaskModel)
             .filter(
                 TaskModel.task_id == task_details.task_id,
-                TaskModel.assigned_to.contains([user_details[0].email]),
+                TaskModel.assigned_to.contains([user_details["data"][0].email]),
             )
             .first()
         )
@@ -87,10 +91,11 @@ def login(user_details: UserLogin, db: Session = Depends(get_db)):
 async def logout(
     user_details=Depends(get_current_user), redis: Redis = Depends(get_redis)
 ):
-
+    if "error" in user_details:
+        return {"error": str(user_details["error"])}
     await redis.set(
-        f"blacklist:{user_details[1]}",
+        f"blacklist:{user_details['data'][0]}",
         "1",
         ex=3600,
     )
-    return {"message": "succesfully logout", "user": user_details}
+    return {"message": "succesfully logout", "user": user_details["data"][0]}

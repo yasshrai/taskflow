@@ -26,14 +26,17 @@ async def get_current_user(
 
     if await redis.exists(f"blacklist:{token}"):
         raise HTTPException(status_code=401, detail="Token revoked")
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception as e:
+        return {"error": e}
     user_id = payload["sub"]
 
     user = db.query(UserModel).filter(UserModel.user_id == user_id).first()
     if not user:
         raise HTTPException(401, "User not Found")
 
-    return user, token
+    return {"data": (user, token)}
 
 
 async def get_current_leader(
