@@ -38,13 +38,15 @@ async def get_current_user(
 
 async def get_current_leader(
     token: str, db: Session = Depends(get_db), redis: Redis = Depends(get_redis)
-):
+) -> dict:
     token = token
     if await redis.exists(f"blacklist:{token}"):
         raise HTTPException(status_code=401, detail="Token revoked")
 
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception as e:
+        return {"error": e}
     leader_id = payload["sub"]
 
     leader = db.query(LeaderModel).filter(LeaderModel.leader_id == leader_id).first()
@@ -52,7 +54,7 @@ async def get_current_leader(
     if not leader:
         raise HTTPException(401, "leader not found")
 
-    return leader, token
+    return {"data": (leader, token)}
 
 
 def create_access_token(id: str):

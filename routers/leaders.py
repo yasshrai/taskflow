@@ -21,10 +21,12 @@ leadersRouter = APIRouter(prefix="/leaders")
 def fetchReport(
     db: Session = Depends(get_db), Leader_details=Depends(get_current_leader)
 ):
+    if "error" in Leader_details:
+        return {"error": str(Leader_details["error"])}
     try:
         tasks = (
             db.query(TaskModel)
-            .filter(TaskModel.assigned_by == Leader_details[0].email)
+            .filter(TaskModel.assigned_by == Leader_details["data"][0].email)
             .all()
         )
         report = {}
@@ -68,6 +70,8 @@ def createLeader(leader_details: LeaderCreate, db: Session = Depends(get_db)):
 
 @leadersRouter.get("/allleader")
 def fetchall(db: Session = Depends(get_db), current_leader=Depends(get_current_leader)):
+    if "error" in current_leader:
+        return {"error": str(current_leader["error"])}
     try:
         return {"message": db.query(LeaderModel).all()}
     except Exception as e:
@@ -80,6 +84,9 @@ def updateTaskStatus(
     db: Session = Depends(get_db),
     current_leader=Depends(get_current_leader),
 ):
+    if "error" in current_leader:
+        return {"error": str(current_leader["error"])}
+
     try:
         task = (
             db.query(TaskModel)
@@ -89,7 +96,7 @@ def updateTaskStatus(
         if not task:
             return {"error": "task not exist"}
 
-        if task.assigned_by != current_leader[0].email:
+        if task.assigned_by != current_leader["data"][0].email:
             return {"error": "task not created by you"}
 
         task.status = str(task_details.newStatus.value)
@@ -106,6 +113,9 @@ def createTask(
     db: Session = Depends(get_db),
     current_leader=Depends(get_current_leader),
 ):
+    if "error" in current_leader:
+        return {"error": str(current_leader["error"])}
+
     usersEmails = task_details.assigned_to
     found, notFound = checkAllUsersExists(usersEmails, db)
     if notFound:
@@ -117,7 +127,7 @@ def createTask(
             title=task_details.title,
             description=task_details.description,
             assigned_to=found,
-            assigned_by=current_leader[0].email,
+            assigned_by=current_leader["data"][0].email,
             status=task_details.status,
         )
         db.add(db_task)
@@ -134,10 +144,13 @@ def createTask(
 def fetchalltasks(
     db: Session = Depends(get_db), current_leader=Depends(get_current_leader)
 ):
+    if "error" in current_leader:
+        return {"error": str(current_leader["error"])}
+
     try:
         return {
             "message": db.query(TaskModel)
-            .filter(TaskModel.assigned_by == current_leader[0].email)
+            .filter(TaskModel.assigned_by == current_leader["data"][0].email)
             .all()
         }
     except Exception as e:
@@ -150,6 +163,8 @@ def createUser(
     db: Session = Depends(get_db),
     current_leader=Depends(get_current_leader),
 ):
+    if "error" in current_leader:
+        return {"error": str(current_leader["error"])}
     try:
         existing = (
             db.query(UserModel).filter(UserModel.email == user_details.email).first()
@@ -179,6 +194,8 @@ def createUser(
 def fetchalluser(
     db: Session = Depends(get_db), current_leader=Depends(get_current_leader)
 ):
+    if "error" in current_leader:
+        return {"error": str(current_leader["error"])}
     try:
         return {"message": db.query(UserModel).all()}
     except Exception as e:
@@ -211,8 +228,10 @@ def login(leader_details: LeaderLogin, db: Session = Depends(get_db)):
 async def logout(
     current_leader=Depends(get_current_leader), redis: Redis = Depends(get_redis)
 ):
+    if "error" in current_leader:
+        return {"error": str(current_leader["error"])}
     await redis.set(
-        f"blacklist:{current_leader[1]}",
+        f"blacklist:{current_leader["data"][1]}",
         "1",
         ex=3600,
     )
