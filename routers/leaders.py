@@ -128,7 +128,7 @@ def createTask(
             description=task_details.description,
             assigned_to=found,
             assigned_by=current_leader["data"][0].email,
-            status=task_details.status,
+            status=task_details.status.value,
         )
         db.add(db_task)
         db.commit()

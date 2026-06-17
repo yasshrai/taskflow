@@ -52,7 +52,7 @@ def updateTask(
 
         db.query(TaskModel).filter(TaskModel.task_id == task_details.task_id).update(
             {
-                "status": task_details.status,
+                "status": task_details.status.value,
                 "title": task_details.title,
                 "description": task_details.description,
             }
