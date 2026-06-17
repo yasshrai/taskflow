@@ -11,9 +11,8 @@ from redis.asyncio import Redis
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    redis_module.redis = Redis(
-        host=os.getenv("REDIS_HOST", "localhost"),
-        port=int(os.getenv("REDIS_PORT", "6379")),
+    redis_module.redis = Redis.from_url(
+        url=os.getenv("REDIS_URL", ""),
         decode_responses=True,
     )
     yield
