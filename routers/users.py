@@ -94,7 +94,7 @@ async def logout(
     if "error" in user_details:
         return {"error": str(user_details["error"])}
     await redis.set(
-        f"blacklist:{user_details['data'][0]}",
+        f"blacklist:{user_details['data'][1]}",
         "1",
         ex=3600,
     )
