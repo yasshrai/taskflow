@@ -9,6 +9,13 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserChangePassword(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    oldpassword: str
+    newpassword: str
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from models.task import TaskModel
-from schemas.leader import LeaderCreate, LeaderLogin
+from schemas.leader import LeaderChangePassword, LeaderCreate, LeaderLogin
 from database.database import get_db
 from models.leader import LeaderModel
 from schemas.task import TaskStatus, TaskCreate
@@ -35,6 +35,31 @@ def fetchReport(
                 report[task.status.lower()] = 0
             report[task.status.lower()] += 1
         return report
+    except Exception as e:
+        return {"error": e}
+
+
+@leadersRouter.post("/changepassword")
+def changePassword(
+    changepassword_details: LeaderChangePassword,
+    db: Session = Depends(get_db),
+    current_leader=Depends(get_current_leader),
+):
+    try:
+
+        if not verify_password(
+            changepassword_details.oldpassword, current_leader["data"][0].password
+        ):
+            return {"message": "incorrect passsword"}
+
+        hashed_password = hash_password(changepassword_details.newpassword)
+
+        db.query(LeaderModel).filter(
+            LeaderModel.leader_id == current_leader["data"][0].leader_id
+        ).update({"password": hashed_password})
+
+        db.commit()
+        return {"message": "succesfully change password"}
     except Exception as e:
         return {"error": e}
 

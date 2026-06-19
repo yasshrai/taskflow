@@ -9,6 +9,12 @@ class LeaderCreate(BaseModel):
     password: str
 
 
+class LeaderChangePassword(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    oldpassword: str
+    newpassword: str
+
+
 class LeaderResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

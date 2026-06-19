@@ -4,9 +4,9 @@ from models.user import UserModel
 from models.task import TaskModel
 from database.database import get_db
 from schemas.task import TaskUpdate
-from schemas.user import UserLogin
+from schemas.user import UserChangePassword, UserLogin
 from tools.authentication import create_access_token, get_current_user
-from tools.password import verify_password
+from tools.password import hash_password, verify_password
 from redis.asyncio import Redis
 from database.redis_db import get_redis
 
@@ -69,6 +69,30 @@ def updateTask(
 
     except Exception as e:
         return {"error": "error occurred"}
+
+
+@userRouter.post("/changepassword")
+def userchangePassword(
+    change_password_details: UserChangePassword,
+    db: Session = Depends(get_db),
+    user_details=Depends(get_current_user),
+):
+    try:
+
+        if not verify_password(
+            change_password_details.oldpassword, user_details["data"][0].password
+        ):
+            return {"message": "incorrect passsword"}
+        hashed_password = hash_password(change_password_details.newpassword)
+
+        db.query(UserModel).filter(
+            UserModel.user_id == user_details["data"][0].user_id
+        ).update({"password": hashed_password})
+
+        db.commit()
+        return {"message": "succesfully change password"}
+    except Exception as e:
+        return {"error": e}
 
 
 @userRouter.post("/login")
